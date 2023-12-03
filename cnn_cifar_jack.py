@@ -4,6 +4,7 @@ import torch
 import torchvision
 import torchvision.transforms as transforms
 from torch import nn, optim
+import torch.nn.functional as F
 from torchvision.models import resnet18
 import argparse
 from CIFAR10_DataLoader import CIFAR10_DataLoader
@@ -16,7 +17,8 @@ parser.add_argument('--batch_size', type=int, default=50, help='Batch size')
 parser.add_argument('--epochs', type=int, default=2, help='Number of epochs')
 parser.add_argument('--noise_level', type=float, default=0.05, help='Amount of noise to add to CIFAR10')
 parser.add_argument('--test_noise', type=int, default=0, help='Should the test set have noise? 1 for yes, 0 for no')
-parser.add_argument('--filename', type=str, default='experiment.txt', help='Filename to save the trained model')
+parser.add_argument('--filename', type=str, default='experiment.txt', help='Filename to save the textual results')
+parser.add_argument('--model_save_file', type=str, default='experiment.pt', help='Filename to save the trained model')
 args = parser.parse_args()
 true_stdout = sys.stdout
 with open(args.filename, 'w') as f:
@@ -113,3 +115,6 @@ with open(args.filename, 'w') as f:
 
     print('Accuracy of the network on the 10000 test images: %f %%' % (
         100 * correct / total))
+    
+    print(f'Saving model to {args.model_save_file}')
+    torch.save(model, args.model_save_file)
