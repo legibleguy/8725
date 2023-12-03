@@ -15,6 +15,10 @@ import torch.nn.functional as F
 import torch.optim as optim
 import matplotlib.pyplot as plt
 import numpy as np
+from CIFAR10_DataLoader import CIFAR10_DataLoader
+
+import argparse
+import sys
 
 transform = transforms.Compose(
     [transforms.ToTensor(),
@@ -22,15 +26,19 @@ transform = transforms.Compose(
 
 batch_size = 4
 
-trainset = torchvision.datasets.CIFAR10(root='./data', train=True,
-                                        download=True, transform=transform)
-trainloader = torch.utils.data.DataLoader(trainset, batch_size=batch_size,
-                                          shuffle=True, num_workers=2)
+# Define the arguments
+parser = argparse.ArgumentParser(description='Train a ResNet on CIFAR10')
+parser.add_argument('--lr', type=float, default=0.00001, help='Learning rate')
+parser.add_argument('--batch_size', type=int, default=50, help='Batch size')
+parser.add_argument('--epochs', type=int, default=2, help='Number of epochs')
+parser.add_argument('--noise_level', type=float, default=0.05, help='Amount of noise to add to CIFAR10')
+parser.add_argument('--test_noise', type=int, default=0, help='Should the test set have noise? 1 for yes, 0 for no')
+parser.add_argument('--filename', type=str, default='experiment.txt', help='Filename to save the trained model')
+args = parser.parse_args()
 
-testset = torchvision.datasets.CIFAR10(root='./data', train=False,
-                                       download=True, transform=transform)
-testloader = torch.utils.data.DataLoader(testset, batch_size=batch_size,
-                                         shuffle=False, num_workers=2)
+dl_class = CIFAR10_DataLoader(batch_size=args.batch_size, noise_level=args.noise_level, test_noise=args.test_noise)
+trainloader = dl_class.get_train_loader()
+testloader = dl_class.get_test_loader()
 
 classes = ('plane', 'car', 'bird', 'cat',
            'deer', 'dog', 'frog', 'horse', 'ship', 'truck')
@@ -60,9 +68,9 @@ print(device)
 net.to(device)
 
 criterion = nn.CrossEntropyLoss()
-optimizer = optim.SGD(net.parameters(), lr=0.001, momentum=0.9)
+optimizer = optim.SGD(net.parameters(), lr=args.lr, momentum=0.9)
 
-for epoch in range(2):  # loop over the dataset multiple times
+for epoch in range(args.epochs):  # loop over the dataset multiple times
 
     running_loss = 0.0
     for i, data in enumerate(trainloader, 0):
