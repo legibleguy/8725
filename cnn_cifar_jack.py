@@ -105,6 +105,7 @@ with open(args.filename, 'w') as f:
     # Test the model
     correct = 0
     total = 0
+    confusion_matrix = np.zeros([10,10], int)
     with torch.no_grad():
         for data in testloader:
             images, labels = data[0].to(device), data[1].to(device)  # Move images and labels to GPU if available
@@ -112,6 +113,23 @@ with open(args.filename, 'w') as f:
             _, predicted = torch.max(outputs.data, 1)
             total += labels.size(0)
             correct += (predicted == labels).sum().item()
+            for i, l in enumerate(labels):
+                confusion_matrix[l.item(), predicted[i].item()] += 1
+
+    print('Accuracy of the network on the 10000 test images: %f %%' % (
+        100 * correct / total))
+
+    print('{0:10s} - {1}'.format('Category','Accuracy'))
+    for i, r in enumerate(confusion_matrix):
+        print('{0:10s} - {1:.1f}'.format(classes[i], r[i]/np.sum(r)*100))
+
+    fig, ax = plt.subplots(1,1,figsize=(8,6))
+    ax.matshow(confusion_matrix, aspect='auto', vmin=0, vmax=1000, cmap=plt.get_cmap('Blues'))
+    plt.ylabel('Actual Category')
+    plt.yticks(range(10), classes)
+    plt.xlabel('Predicted Category')
+    plt.xticks(range(10), classes)
+    plt.savefig(f'{args.filename}.png', dpi=300)
 
     print('Accuracy of the network on the 10000 test images: %f %%' % (
         100 * correct / total))
