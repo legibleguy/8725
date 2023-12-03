@@ -1,14 +1,18 @@
 # Adapting Brendan's ResNet code for Daniel's CNN Model
 
+import argparse
+import sys
+import matplotlib.pyplot as plt
+import numpy as np
 import torch
 import torchvision
 import torchvision.transforms as transforms
 from torch import nn, optim
 import torch.nn.functional as F
 from torchvision.models import resnet18
-import argparse
+
 from CIFAR10_DataLoader import CIFAR10_DataLoader
-import sys
+from convert_log_to_csv import process_file as log_to_csv
 
 # Define the arguments
 parser = argparse.ArgumentParser(description='Train a ResNet on CIFAR10')
@@ -30,6 +34,7 @@ with open(args.filename, 'w') as f:
     dl_class = CIFAR10_DataLoader(batch_size=args.batch_size, noise_level=args.noise_level, test_noise=args.test_noise)
     trainloader = dl_class.get_train_loader()
     testloader = dl_class.get_test_loader()
+    classes = dl_class.get_classes()
 
     # Define the model
     class Net(nn.Module):
@@ -102,6 +107,9 @@ with open(args.filename, 'w') as f:
         sys.stdout = f
     print('Finished Training')
 
+    print(f'Saving model to {args.model_save_file}')
+    torch.save(model, args.model_save_file)
+
     # Test the model
     correct = 0
     total = 0
@@ -133,6 +141,6 @@ with open(args.filename, 'w') as f:
 
     print('Accuracy of the network on the 10000 test images: %f %%' % (
         100 * correct / total))
-    
-    print(f'Saving model to {args.model_save_file}')
-    torch.save(model, args.model_save_file)
+
+# Convert Training Logs to a .csv file for Microsoft Excel
+log_to_csv(args.filename, f'{args.filename}.csv')
